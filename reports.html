@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - POS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Print Styles - To make the report look clean on paper */
+        @media print {
+            body { background-color: white !important; color: black !important; }
+            /* Hide Sidebar, Header buttons, and Big Stat Boxes */
+            aside, .no-print, #stats-container { display: none !important; }
+            main { padding: 0 !important; margin: 0 !important; width: 100% !important; flex: none !important; }
+            .bg-\[\#1e293b\], .bg-\[\#0f172a\] { background-color: white !important; border: none !important; box-shadow: none !important;}
+            .text-white, .text-gray-300, .text-gray-400 { color: black !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border-bottom: 1px solid #ddd !important; padding: 10px !important; color: black !important; }
+            th { background-color: #f3f4f6 !important; font-weight: bold !important; border-bottom: 2px solid #000 !important; }
+            /* Footer Total Row Styling for Print */
+            .print-total-row td { border-top: 2px solid #000 !important; font-size: 16px; font-weight: bold; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-white font-sans flex h-screen overflow-hidden">
+    
+    <aside class="w-64 bg-[#1f2937] flex flex-col justify-between border-r border-gray-700 h-full flex-shrink-0">
+        <div>
+            <div class="p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-center font-bold text-sm tracking-wide shadow-md flex items-center justify-center gap-2">
+                <i class="fas fa-clinic-medical text-lg"></i> Point of Sale System
+            </div>
+            <nav class="mt-6 flex flex-col gap-2 px-4">
+                <a href="index.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-home w-5"></i> Dashboard
+                </a>
+                <a href="pos.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-shopping-cart w-5"></i> POS
+                </a>
+                <a href="medicines.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-pills w-5"></i> Medicines
+                </a>
+                <a href="customers.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-users w-5"></i> Customers
+                </a>
+                <a href="sales-history.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-file-invoice-dollar w-5"></i> Sales History
+                </a>
+                <a href="reports.html" class="bg-blue-600 text-white py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-chart-bar w-5"></i> Reports
+                </a>
+                <a href="purchase-order.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+                    <i class="fas fa-clipboard-list w-5"></i> Purchase Order
+                </a>
+            </nav>
+        </div>
+        
+        <div class="p-3 bg-[#374151] m-4 rounded-xl flex items-center gap-3 shadow-lg no-print">
+            <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center font-bold text-lg">A</div>
+            <div>
+                <div class="text-sm font-bold text-white">Muhammad Uzair</div>
+                <div class="text-xs text-gray-400">Administrator</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        
+        <div class="hidden print:block w-full text-center border-b-[3px] border-black pb-4 mb-6">
+            <h1 class="text-4xl font-extrabold text-black uppercase tracking-widest" style="font-family: 'Georgia', serif;">YOUR MEDICAL STORE</h1>
+            <p class="text-sm text-black mt-1 font-semibold">Lahore, Punjab | Ph: 0300-0000000</p>
+        </div>
+
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-1 print:text-xl print:text-black">Reports & Analytics</h1>
+                <p class="text-gray-400 text-sm no-print">Generate and view system reports</p>
+                <p class="text-black text-sm hidden print:block mt-2 font-medium" id="print-date-stamp"></p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-[#334155] hover:bg-[#475569] text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 border border-gray-600 shadow-lg">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+        </div>
+
+        <div class="bg-[#1e293b] p-4 rounded-xl border border-gray-700 mb-6 flex flex-wrap items-center gap-4 no-print">
+            <div class="flex-1 min-w-[350px]">
+                <label class="text-xs text-gray-400 mb-1 block">Report Type</label>
+                <div class="flex bg-[#0f172a] rounded-lg p-1" id="report-tabs">
+                    <button onclick="switchReport('sales')" id="tab-sales" class="flex-1 bg-blue-600 text-white py-2 px-2 rounded-md text-sm font-medium transition-colors">All Sales</button>
+                    <button onclick="switchReport('today')" id="tab-today" class="flex-1 text-gray-400 py-2 px-2 text-sm font-medium hover:text-white transition-colors border-l border-gray-700">Today's Sales</button>
+                    <button onclick="switchReport('inventory')" id="tab-inventory" class="flex-1 text-gray-400 py-2 px-2 text-sm font-medium hover:text-white transition-colors border-l border-gray-700">Inventory</button>
+                    <button onclick="switchReport('lowstock')" id="tab-lowstock" class="flex-1 text-gray-400 py-2 px-2 text-sm font-medium hover:text-white transition-colors border-l border-gray-700">Low Stock</button>
+                </div>
+            </div>
+            <div class="date-filters">
+                <label class="text-xs text-gray-400 mb-1 block">Start Date</label>
+                <input type="date" id="startDate" onchange="generateReport()" class="bg-[#0f172a] border border-gray-700 text-white rounded-lg py-2 px-4 focus:outline-none focus:border-blue-500 [color-scheme:dark]">
+            </div>
+            <div class="date-filters">
+                <label class="text-xs text-gray-400 mb-1 block">End Date</label>
+                <input type="date" id="endDate" onchange="generateReport()" class="bg-[#0f172a] border border-gray-700 text-white rounded-lg py-2 px-4 focus:outline-none focus:border-blue-500 [color-scheme:dark]">
+            </div>
+        </div>
+
+        <div id="stats-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 no-print">
+            </div>
+
+        <div class="bg-[#1e293b] border border-gray-700 rounded-xl p-6 print-box">
+            <h3 id="report-title" class="text-xl font-bold text-white mb-1">Transaction History</h3>
+            <p id="report-subtitle" class="text-sm text-gray-400 mb-6">Data loaded successfully</p>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead id="table-head">
+                        </thead>
+                    <tbody id="table-body" class="text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DATA FETCHING ---
+        let currentReport = 'sales';
+        
+        let salesData = JSON.parse(localStorage.getItem('pos_sales_history')) || [];
+        
+        function getMedicines() {
+            const saved = localStorage.getItem('pos_medicines');
+            if (saved) return JSON.parse(saved);
+            return [
+                { id: 1, name: "Hylixia SYP", price: 295.00, stock: 10 },
+                { id: 2, name: "HYLIXIA PLUS", price: 325.00, stock: 5 },
+                { id: 3, name: "SYP MALTOFER", price: 370.00, stock: 8 },
+                { id: 4, name: "MALTOFER DROPS", price: 358.88, stock: 0 },
+                { id: 5, name: "METODINE SYP", price: 200.00, stock: 2 },
+                { id: 6, name: "METODINE DF SYP", price: 135.00, stock: 12 }
+            ];
+        }
+        let inventoryData = getMedicines();
+
+        // Helpers
+        function extractAmount(totalStr) {
+            if (!totalStr) return 0;
+            return parseFloat(String(totalStr).replace(/[^0-9.-]+/g, "")) || 0;
+        }
+
+        function convertDateForCompare(dateStr) {
+            if (!dateStr) return "";
+            if (dateStr.includes('/')) {
+                const datePart = dateStr.split(',')[0].trim(); 
+                const parts = datePart.split('/'); 
+                if(parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            const d = new Date(dateStr);
+            if (!isNaN(d)) return d.toISOString().split('T')[0];
+            return dateStr;
+        }
+
+        function formatDisplayDate(dateStr) {
+            const compDate = convertDateForCompare(dateStr);
+            if (!compDate) return dateStr;
+            const d = new Date(compDate);
+            if(isNaN(d)) return dateStr;
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+        }
+
+        function setDefaultDates() {
+            const date = new Date();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
+            const today = date.toISOString().split('T')[0];
+            document.getElementById('startDate').value = firstDay;
+            document.getElementById('endDate').value = today;
+            document.getElementById('print-date-stamp').innerText = "Printed on: " + new Date().toLocaleString();
+        }
+
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+        }
+
+        function switchReport(type) {
+            currentReport = type;
+            
+            // Handle "Today's Sale" special click
+            if(type === 'today') {
+                setTodayDate();
+            } else if (type === 'sales') {
+                setDefaultDates(); // Reset to month if 'All Sales' is clicked
+            }
+            
+            // Update button styles
+            const tabs = ['sales', 'today', 'inventory', 'lowstock'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === type) {
+                    btn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            // Show Date Filters only for Sales & Today
+            const dateFilters = document.querySelectorAll('.date-filters');
+            dateFilters.forEach(el => {
+                el.style.display = (type === 'sales' || type === 'today') ? 'block' : 'none';
+            });
+
+            generateReport();
+        }
+
+        function generateReport() {
+            const statsContainer = document.getElementById('stats-container');
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            const title = document.getElementById('report-title');
+            const subtitle = document.getElementById('report-subtitle');
+
+            tbody.innerHTML = '';
+
+            // Update timestamp for print
+            document.getElementById('print-date-stamp').innerText = "Printed on: " + new Date().toLocaleString();
+
+            if (currentReport === 'sales' || currentReport === 'today') {
+                // --- SALES REPORT ---
+                title.innerText = currentReport === 'today' ? "Today's Sales Report" : "Sales Transaction History";
+                
+                const start = document.getElementById('startDate').value;
+                const end = document.getElementById('endDate').value;
+                
+                if(start === end) {
+                    subtitle.innerText = `Date: ${formatDisplayDate(start)}`;
+                } else {
+                    subtitle.innerText = `Period: ${formatDisplayDate(start)} to ${formatDisplayDate(end)}`;
+                }
+
+                let totalRev = 0;
+                let totalSales = 0;
+                let totalReturns = 0;
+
+                const filteredSales = salesData.filter(sale => {
+                    const sDate = convertDateForCompare(sale.date);
+                    return sDate >= start && sDate <= end;
+                });
+
+                filteredSales.forEach(sale => {
+                    if (sale.status === 'Completed') {
+                        totalRev += extractAmount(sale.total);
+                        totalSales++;
+                    } else if (sale.status === 'Returned') {
+                        totalReturns += extractAmount(sale.total);
+                    }
+                });
+
+                // Render Stats (Hidden in Print)
+                statsContainer.innerHTML = `
+                    <div class="bg-[#16a34a] p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-green-100 font-bold uppercase mb-2">Net Revenue</div>
+                        <div class="text-4xl font-extrabold break-words">PKR ${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="bg-blue-600 p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-blue-100 font-bold uppercase mb-2">Completed Invoices</div>
+                        <div class="text-4xl font-extrabold">${totalSales}</div>
+                    </div>
+                    <div class="bg-red-600 p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-red-100 font-bold uppercase mb-2">Returned Amount</div>
+                        <div class="text-4xl font-extrabold break-words">PKR ${totalReturns.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    </div>
+                `;
+
+                // Render Table Headers
+                thead.innerHTML = `
+                    <tr class="text-gray-400 text-sm border-b border-gray-700">
+                        <th class="pb-3 font-semibold">Invoice ID</th>
+                        <th class="pb-3 font-semibold">Date</th>
+                        <th class="pb-3 font-semibold">Customer</th>
+                        <th class="pb-3 font-semibold text-center">Status</th>
+                        <th class="pb-3 font-semibold text-right">Amount (PKR)</th>
+                    </tr>
+                `;
+
+                if(filteredSales.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-500 italic">No sales found for this date.</td></tr>`;
+                } else {
+                    filteredSales.slice().reverse().forEach(sale => {
+                        let statusColor = sale.status === 'Completed' ? 'text-green-400' : 'text-red-400';
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-700/50 hover:bg-[#334155] transition-colors">
+                                <td class="py-3 text-blue-400 font-medium">${sale.id}</td>
+                                <td class="py-3 text-gray-300">${formatDisplayDate(sale.date)}</td>
+                                <td class="py-3 text-gray-300">${sale.customer}</td>
+                                <td class="py-3 font-bold text-center ${statusColor}">${sale.status}</td>
+                                <td class="py-3 text-white font-bold text-right">${extractAmount(sale.total).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    // Add Total Row at the bottom (Will be prominent in print)
+                    tbody.innerHTML += `
+                        <tr class="print-total-row bg-[#0f172a]/50">
+                            <td colspan="4" class="py-4 font-bold text-right text-white">Grand Total Revenue:</td>
+                            <td class="py-4 font-extrabold text-[#22c55e] text-right text-lg">PKR ${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+
+            } else if (currentReport === 'inventory') {
+                // --- INVENTORY REPORT ---
+                title.innerText = "Current Inventory Valuation";
+                subtitle.innerText = "Real-time stock status";
+
+                let totalProducts = inventoryData.length;
+                let totalStockUnits = 0;
+                let totalValue = 0;
+
+                inventoryData.forEach(item => {
+                    totalStockUnits += item.stock;
+                    totalValue += (item.stock * item.price);
+                });
+
+                // Render Stats (Hidden in Print)
+                statsContainer.innerHTML = `
+                    <div class="bg-blue-600 p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-blue-100 font-bold uppercase mb-2">Total Products</div>
+                        <div class="text-4xl font-extrabold">${totalProducts}</div>
+                    </div>
+                    <div class="bg-[#9333ea] p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-purple-100 font-bold uppercase mb-2">Total Units in Stock</div>
+                        <div class="text-4xl font-extrabold">${totalStockUnits}</div>
+                    </div>
+                    <div class="bg-[#16a34a] p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-green-100 font-bold uppercase mb-2">Total Inventory Value</div>
+                        <div class="text-4xl font-extrabold break-words">PKR ${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    </div>
+                `;
+
+                // Render Table Headers
+                thead.innerHTML = `
+                    <tr class="text-gray-400 text-sm border-b border-gray-700">
+                        <th class="pb-3 font-semibold">Medicine Name</th>
+                        <th class="pb-3 font-semibold text-center">Unit Price (PKR)</th>
+                        <th class="pb-3 font-semibold text-center">Current Stock</th>
+                        <th class="pb-3 font-semibold text-right">Stock Value (PKR)</th>
+                    </tr>
+                `;
+
+                if(inventoryData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-gray-500 italic">No items in inventory.</td></tr>`;
+                } else {
+                    inventoryData.forEach(item => {
+                        let stockColor = item.stock <= 5 ? (item.stock === 0 ? 'text-red-500 font-bold' : 'text-orange-400 font-bold') : 'text-gray-300';
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-700/50 hover:bg-[#334155] transition-colors">
+                                <td class="py-3 text-white font-medium">${item.name}</td>
+                                <td class="py-3 text-gray-300 text-center">${item.price.toLocaleString()}</td>
+                                <td class="py-3 ${stockColor} text-center">${item.stock}</td>
+                                <td class="py-3 text-[#22c55e] font-bold text-right">${(item.price * item.stock).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    // Add Total Row at the bottom
+                    tbody.innerHTML += `
+                        <tr class="print-total-row bg-[#0f172a]/50">
+                            <td colspan="3" class="py-4 font-bold text-right text-white">Total Inventory Value:</td>
+                            <td class="py-4 font-extrabold text-[#22c55e] text-right text-lg">PKR ${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `;
+                }
+
+            } else if (currentReport === 'lowstock') {
+                // --- LOW STOCK REPORT ---
+                title.innerText = "Low Stock & Reorder Report";
+                subtitle.innerText = "Items with stock quantity of 5 or less";
+
+                const lowStockItems = inventoryData.filter(item => item.stock <= 5);
+                let outOfStock = lowStockItems.filter(item => item.stock === 0).length;
+                let nearlyOut = lowStockItems.length - outOfStock;
+
+                // Render Stats (Hidden in print)
+                statsContainer.innerHTML = `
+                    <div class="bg-red-600 p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-red-100 font-bold uppercase mb-2">Critical (Out of Stock)</div>
+                        <div class="text-4xl font-extrabold">${outOfStock}</div>
+                    </div>
+                    <div class="bg-orange-600 p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-orange-100 font-bold uppercase mb-2">Low Stock Items</div>
+                        <div class="text-4xl font-extrabold">${nearlyOut}</div>
+                    </div>
+                    <div class="bg-[#334155] p-6 rounded-2xl shadow-lg print-box">
+                        <div class="text-sm text-gray-300 font-bold uppercase mb-2">Total Items to Order</div>
+                        <div class="text-4xl font-extrabold mt-2">${lowStockItems.length}</div>
+                    </div>
+                `;
+
+                // Render Table Headers
+                thead.innerHTML = `
+                    <tr class="text-gray-400 text-sm border-b border-gray-700">
+                        <th class="pb-3 font-semibold">Medicine Name</th>
+                        <th class="pb-3 font-semibold text-center">Current Stock</th>
+                        <th class="pb-3 font-semibold text-center">Status</th>
+                    </tr>
+                `;
+
+                if(lowStockItems.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-green-500 font-bold italic"><i class="fas fa-check-circle mr-2"></i> All items are sufficiently stocked!</td></tr>`;
+                } else {
+                    lowStockItems.sort((a,b) => a.stock - b.stock).forEach(item => {
+                        let statusBadge = item.stock === 0 
+                            ? `<span class="bg-red-900/50 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-800">Out of Stock</span>`
+                            : `<span class="bg-orange-900/50 text-orange-400 px-3 py-1 rounded-full text-xs font-bold border border-orange-800">Order Soon</span>`;
+                            
+                        tbody.innerHTML += `
+                            <tr class="border-b border-gray-700/50 hover:bg-[#334155] transition-colors">
+                                <td class="py-3 text-white font-medium">${item.name}</td>
+                                <td class="py-3 text-center font-bold text-red-400">${item.stock}</td>
+                                <td class="py-3 text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    // Add Total Row at the bottom
+                    tbody.innerHTML += `
+                        <tr class="print-total-row bg-[#0f172a]/50">
+                            <td colspan="2" class="py-4 font-bold text-right text-white">Total Medicines to Reorder:</td>
+                            <td class="py-4 font-extrabold text-red-400 text-center text-lg">${lowStockItems.length}</td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        // Initialize Page
+        setDefaultDates();
+        switchReport('sales');
+    </script>
+</body>
+</html>

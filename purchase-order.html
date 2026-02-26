@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orders - POS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Print Styles */
+        @media print {
+            body { background-color: white !important; color: black !important; }
+            aside, .no-print, .action-col { display: none !important; }
+            main { padding: 0 !important; margin: 0 !important; width: 100% !important; flex: none !important; }
+            .bg-\[\#1e293b\], .bg-\[\#0f172a\] { background-color: white !important; border: none !important; box-shadow: none !important;}
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border-bottom: 1px solid #ddd !important; padding: 10px !important; color: black !important; text-align: left; }
+            th { background-color: #f3f4f6 !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-white font-sans flex h-screen overflow-hidden relative">
+
+    <div id="toast" class="fixed top-5 right-5 bg-green-600 text-white px-6 py-3 rounded-lg shadow-2xl transform transition-transform duration-300 translate-x-[150%] z-[100] flex items-center gap-3 font-medium">
+        <i class="fas fa-check-circle text-xl"></i>
+        <span id="toast-msg">Success!</span>
+    </div>
+    
+    <aside class="w-64 bg-[#1f2937] flex flex-col justify-between border-r border-gray-700 h-full flex-shrink-0">
+        <div>
+            <div class="p-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-center font-bold text-sm tracking-wide shadow-md flex items-center justify-center gap-2">
+                <i class="fas fa-clinic-medical text-lg"></i> Point of Sale System
+            </div>
+            <nav class="mt-6 flex flex-col gap-2 px-4">
+                <a href="index.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-home w-5"></i> Dashboard</a>
+                <a href="pos.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-shopping-cart w-5"></i> POS</a>
+                <a href="medicines.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-pills w-5"></i> Medicines</a>
+                <a href="customers.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-users w-5"></i> Customers</a>
+                <a href="sales-history.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-file-invoice-dollar w-5"></i> Sales History</a>
+                <a href="reports.html" class="text-gray-300 hover:bg-gray-700 py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-chart-bar w-5"></i> Reports</a>
+                <a href="purchase-order.html" class="bg-blue-600 text-white py-2.5 px-4 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors"><i class="fas fa-clipboard-list w-5"></i> Purchase Order</a>
+            </nav>
+        </div>
+        
+        <div class="p-3 bg-[#374151] m-4 rounded-xl flex items-center gap-3 shadow-lg no-print">
+            <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center font-bold text-lg">A</div>
+            <div>
+                <div class="text-sm font-bold text-white">Muhammad Uzair</div>
+                <div class="text-xs text-gray-400">Administrator</div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-1">Purchase Orders</h1>
+                <p class="text-gray-400 text-sm no-print">Manage suppliers and restock your inventory</p>
+                <h2 class="hidden print:block text-black font-bold text-xl mb-4 mt-2">Purchase Order Record</h2>
+            </div>
+            <button onclick="openModal()" class="no-print bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg">
+                <i class="fas fa-plus"></i> Create PO
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 no-print">
+            <div class="bg-[#1e293b] p-6 rounded-2xl border border-gray-700 shadow-md">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-sm text-gray-400 font-bold uppercase">Total Orders</div>
+                    <i class="fas fa-clipboard-list text-blue-500 text-xl"></i>
+                </div>
+                <div class="text-4xl font-extrabold text-white" id="stat-total">0</div>
+            </div>
+            <div class="bg-[#1e293b] p-6 rounded-2xl border border-gray-700 shadow-md">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-sm text-orange-400 font-bold uppercase">Pending Delivery</div>
+                    <i class="fas fa-truck text-orange-500 text-xl"></i>
+                </div>
+                <div class="text-4xl font-extrabold text-white" id="stat-pending">0</div>
+            </div>
+            <div class="bg-[#1e293b] p-6 rounded-2xl border border-gray-700 shadow-md">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="text-sm text-green-400 font-bold uppercase">Successfully Received</div>
+                    <i class="fas fa-box-open text-green-500 text-xl"></i>
+                </div>
+                <div class="text-4xl font-extrabold text-white" id="stat-received">0</div>
+            </div>
+        </div>
+
+        <div id="low-stock-section" class="mb-6 hidden no-print">
+            <h3 class="text-lg font-bold text-red-400 mb-3 flex items-center gap-2"><i class="fas fa-exclamation-triangle"></i> Low Stock Alerts</h3>
+            <div id="low-stock-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                </div>
+        </div>
+
+        <div class="bg-[#1e293b] border border-gray-700 rounded-xl overflow-hidden shadow-lg">
+            <table class="w-full text-left border-collapse" id="po-table">
+                <thead>
+                    <tr class="bg-[#334155] border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
+                        <th class="p-4 font-semibold">PO Number</th>
+                        <th class="p-4 font-semibold">Date</th>
+                        <th class="p-4 font-semibold">Supplier</th>
+                        <th class="p-4 font-semibold">Medicine</th>
+                        <th class="p-4 font-semibold text-center">Qty</th>
+                        <th class="p-4 font-semibold text-center">Status</th>
+                        <th class="p-4 font-semibold text-center action-col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="po-table-body" class="text-sm">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="poModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 p-4 no-print">
+        <div class="bg-[#1e293b] rounded-xl shadow-2xl w-full max-w-lg border border-gray-700 overflow-hidden transform transition-all">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center bg-[#0f172a]">
+                <h2 class="text-xl font-bold text-white"><i class="fas fa-file-invoice text-blue-400 mr-2"></i> Create Purchase Order</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="poForm" onsubmit="savePO(event)">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Supplier / Distributor Name *</label>
+                        <div class="flex gap-2">
+                            <select id="poSupplier" required class="flex-1 bg-[#334155] border border-gray-600 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-blue-500 appearance-none">
+                                <option value="" disabled selected>-- Select Supplier --</option>
+                                </select>
+                            <button type="button" onclick="addNewSupplier()" class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2.5 rounded-lg text-sm font-bold transition-colors whitespace-nowrap shadow-md">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Select Medicine *</label>
+                        <select id="poMedicine" required class="w-full bg-[#334155] border border-gray-600 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-blue-500 appearance-none">
+                            <option value="">-- Choose from inventory --</option>
+                            </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Order Quantity *</label>
+                            <input type="number" id="poQty" required min="1" value="10" class="w-full bg-[#334155] border border-gray-600 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">Order Date *</label>
+                            <input type="date" id="poDate" required class="w-full bg-[#334155] border border-gray-600 text-white rounded-lg py-2.5 px-3 focus:outline-none focus:border-blue-500 [color-scheme:dark]">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                        <button type="button" onclick="closeModal()" class="text-gray-300 hover:text-white px-4 font-medium transition-colors">Cancel</button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-bold text-white transition-colors flex items-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Place Order
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA MANAGEMENT ---
+        
+        function getMedicines() {
+            const saved = localStorage.getItem('pos_medicines');
+            if (saved) return JSON.parse(saved);
+            return [
+                { id: 1, name: "Hylixia SYP", price: 295.00, stock: 10 },
+                { id: 2, name: "HYLIXIA PLUS", price: 325.00, stock: 5 },
+                { id: 3, name: "SYP MALTOFER", price: 370.00, stock: 8 },
+                { id: 4, name: "MALTOFER DROPS", price: 358.88, stock: 0 }
+            ]; 
+        }
+
+        // Supplier Management Functions
+        function getSuppliers() {
+            const saved = localStorage.getItem('pos_suppliers');
+            if (saved) return JSON.parse(saved);
+            return ["Ali Pharma", "GSK Distributors", "Medipak"]; // Default Suppliers
+        }
+
+        function populateSupplierDropdown() {
+            const suppliers = getSuppliers();
+            const select = document.getElementById('poSupplier');
+            const currentVal = select.value; // Store current selection if any
+            
+            select.innerHTML = '<option value="" disabled selected>-- Select Supplier --</option>';
+            suppliers.forEach(s => {
+                select.innerHTML += `<option value="${s}">${s}</option>`;
+            });
+            
+            // Re-select previously selected value if it still exists
+            if(currentVal && suppliers.includes(currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function addNewSupplier() {
+            const newSup = prompt("Enter new Supplier or Distributor name:");
+            if (newSup && newSup.trim() !== "") {
+                const suppliers = getSuppliers();
+                // Check if already exists
+                const exists = suppliers.find(s => s.toLowerCase() === newSup.trim().toLowerCase());
+                
+                if (!exists) {
+                    suppliers.push(newSup.trim());
+                    localStorage.setItem('pos_suppliers', JSON.stringify(suppliers));
+                    populateSupplierDropdown();
+                    // Auto-select the newly added supplier
+                    document.getElementById('poSupplier').value = newSup.trim();
+                    showToast("Supplier added successfully!");
+                } else {
+                    alert("This supplier already exists in the list!");
+                }
+            }
+        }
+
+        let poData = JSON.parse(localStorage.getItem('pos_purchase_orders')) || [];
+        document.getElementById('poDate').value = new Date().toISOString().split('T')[0];
+
+        // --- UI FUNCTIONS ---
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-x-[150%]');
+            setTimeout(() => { toast.classList.add('translate-x-[150%]'); }, 3000);
+        }
+
+        function populateMedicineDropdown() {
+            const meds = getMedicines();
+            const select = document.getElementById('poMedicine');
+            select.innerHTML = '<option value="" disabled selected>-- Choose from inventory --</option>';
+            meds.forEach(m => {
+                select.innerHTML += `<option value="${m.name}">${m.name} (Current: ${m.stock})</option>`;
+            });
+        }
+
+        function renderLowStock() {
+            const meds = getMedicines();
+            const lowStockMeds = meds.filter(m => m.stock <= 5);
+            const container = document.getElementById('low-stock-section');
+            const cardsContainer = document.getElementById('low-stock-cards');
+            
+            if (lowStockMeds.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            cardsContainer.innerHTML = '';
+            
+            lowStockMeds.forEach(m => {
+                const stockClass = m.stock === 0 ? 'text-red-500' : 'text-orange-400';
+                cardsContainer.innerHTML += `
+                    <div class="bg-[#1e293b] border border-gray-700 p-4 rounded-xl shadow-sm flex justify-between items-center transition-transform hover:-translate-y-1">
+                        <div>
+                            <h4 class="font-bold text-white text-sm truncate max-w-[120px]" title="${m.name}">${m.name}</h4>
+                            <div class="text-xs ${stockClass} font-semibold mt-0.5">Stock: ${m.stock}</div>
+                        </div>
+                        <button onclick="quickOrder('${m.name}')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-md">
+                            Order
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function quickOrder(medName) {
+            openModal();
+            document.getElementById('poMedicine').value = medName;
+            document.getElementById('poSupplier').focus();
+        }
+
+        function updateStats() {
+            let pending = 0; let received = 0;
+            poData.forEach(po => {
+                if(po.status === 'Pending') pending++;
+                if(po.status === 'Received') received++;
+            });
+            document.getElementById('stat-total').innerText = poData.length;
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-received').innerText = received;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('po-table-body');
+            tbody.innerHTML = '';
+
+            if(poData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-500 italic">No Purchase Orders found. Create one to restock inventory.</td></tr>`;
+            } else {
+                poData.slice().reverse().forEach(po => {
+                    let statusHtml = '';
+                    let actionHtml = '';
+
+                    if(po.status === 'Pending') {
+                        statusHtml = `<span class="bg-orange-900/50 text-orange-400 px-3 py-1 rounded-full text-[11px] font-bold border border-orange-800 uppercase tracking-wide"><i class="fas fa-clock mr-1"></i> Pending</span>`;
+                        actionHtml = `
+                            <button onclick="markReceived('${po.id}')" title="Mark as Received & Update Stock" class="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-600 px-3 py-1.5 rounded transition-all text-xs font-medium mr-2">
+                                <i class="fas fa-check"></i> Receive
+                            </button>
+                            <button onclick="deletePO('${po.id}')" title="Delete" class="text-red-400 hover:text-red-300 transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        `;
+                    } else if (po.status === 'Received') {
+                        statusHtml = `<span class="bg-green-900/50 text-green-400 px-3 py-1 rounded-full text-[11px] font-bold border border-green-800 uppercase tracking-wide"><i class="fas fa-check-double mr-1"></i> Received</span>`;
+                        actionHtml = `
+                            <button onclick="window.print()" title="Print PO" class="text-blue-400 hover:text-blue-300 transition-colors mr-3"><i class="fas fa-print"></i></button>
+                            <span class="text-gray-600 text-xs italic"><i class="fas fa-lock"></i> Locked</span>
+                        `;
+                    }
+
+                    const dateObj = new Date(po.date);
+                    const formattedDate = !isNaN(dateObj) ? dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : po.date;
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-700/50 hover:bg-[#334155] transition-colors">
+                            <td class="p-4 text-blue-400 font-bold">PO-${po.id}</td>
+                            <td class="p-4 text-gray-300">${formattedDate}</td>
+                            <td class="p-4 text-white font-medium">${po.supplier}</td>
+                            <td class="p-4 text-gray-300">${po.medicine}</td>
+                            <td class="p-4 text-center font-bold text-white">${po.qty}</td>
+                            <td class="p-4 text-center">${statusHtml}</td>
+                            <td class="p-4 text-center action-col">${actionHtml}</td>
+                        </tr>
+                    `;
+                });
+            }
+            updateStats();
+        }
+
+        // --- LOGIC FUNCTIONS ---
+
+        function openModal() {
+            populateSupplierDropdown(); // Added supplier logic
+            populateMedicineDropdown();
+            document.getElementById('poForm').reset();
+            document.getElementById('poDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('poModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('poModal').classList.add('hidden');
+        }
+
+        function savePO(event) {
+            event.preventDefault();
+            
+            const newPO = {
+                id: Math.floor(1000 + Math.random() * 9000).toString(),
+                supplier: document.getElementById('poSupplier').value,
+                medicine: document.getElementById('poMedicine').value,
+                qty: parseInt(document.getElementById('poQty').value),
+                date: document.getElementById('poDate').value,
+                status: 'Pending'
+            };
+
+            poData.push(newPO);
+            localStorage.setItem('pos_purchase_orders', JSON.stringify(poData));
+            
+            closeModal();
+            renderTable();
+            showToast("Purchase Order Created!");
+        }
+
+        function deletePO(id) {
+            if(confirm("Are you sure you want to delete this Pending Order?")) {
+                poData = poData.filter(po => po.id !== id);
+                localStorage.setItem('pos_purchase_orders', JSON.stringify(poData));
+                renderTable();
+            }
+        }
+
+        function markReceived(id) {
+            if(confirm("Mark this order as Received? This will automatically add the quantity to your Medicine Stock.")) {
+                
+                let index = poData.findIndex(po => po.id === id);
+                
+                if(index > -1 && poData[index].status === 'Pending') {
+                    poData[index].status = 'Received';
+                    localStorage.setItem('pos_purchase_orders', JSON.stringify(poData));
+
+                    let meds = getMedicines();
+                    let medIndex = meds.findIndex(m => m.name === poData[index].medicine);
+                    
+                    if(medIndex > -1) {
+                        meds[medIndex].stock += poData[index].qty;
+                        localStorage.setItem('pos_medicines', JSON.stringify(meds));
+                    }
+
+                    renderTable();
+                    renderLowStock(); // Alert update
+                    showToast(`${poData[index].qty} items added to Inventory!`);
+                }
+            }
+        }
+
+        // Initialize Page
+        renderTable();
+        renderLowStock(); 
+    </script>
+</body>
+</html>
